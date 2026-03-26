@@ -1,8 +1,11 @@
 import streamlit as st
 import random
 import os
-from openai import OpenAI
-from fpdf import FPDF
+import google.generativeai as genai
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -52,11 +55,33 @@ d.
 Correct Answer:
 Explanation:
 """
-    response = client.chat.completions.create(
-        model="gpt-5.3",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.choices[0].message.content
+    def generate_question(section, topic, difficulty, options):
+    prompt = f"""
+Create an IPMAT Indore question.
+
+Section: {section}
+Topic: {topic}
+Difficulty: {difficulty}
+
+Rules:
+- Maintain IPMAT level
+- Options must be similar length
+- Include traps
+- Avoid obvious answers
+
+Format:
+Question:
+a.
+b.
+c.
+d.
+
+Correct Answer:
+Explanation (concise for all options)
+"""
+
+    response = model.generate_content(prompt)
+    return response.text
 
 # PDF
 def generate_pdf(questions):
